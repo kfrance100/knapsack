@@ -4,51 +4,46 @@
 
 /* the number of threads */
 int num_threads;
-#define START 0
-#define END 10000
 
 /* the function called for each thread */
-void* sum_part(void* idp) {
+void* func(void* idp) {
     /* get our thread id */
     int id = * (int*) idp;
 
-    /* calculate the start and end points by evenly dividing the range */
-    int start = ((END - START) / num_threads) * id;
-    int end = start + ((END - START) / num_threads) - 1;
-
-    /* the last thread needs to do all remaining ones */
-    if (id == (num_threads - 1)) {
-        end = END;
-    }
+    /* calculate the best combination based on file */
 
     /* allocate space for the answer */
     int* answer = malloc(sizeof(int));
 
-    /* do the calculation */
-    int i;
-    for (i = start; i <= end; i++) {
-        *answer += i;
-    }
-
     /* debugging output */
-    printf("Thread %d: sum(%d, %d) = %d\n", id, start, end, *answer);
+    // printf("Thread %d: sum(%d, %d) = %d\n", id, start, end, *answer);
 
     return answer;
 }
 
 int main (int argc, char** argv) {
+
     /* get the number of threads */
-    if (argc < 2) {
-        printf("Pass the number of threads to use!\n");
+    if (argc < 3) {
+        printf("Pass the knapsack file name and the number of threads to run the program with!\n");
         return 0;
-    } else {
-        num_threads = atoi(argv[1]);
+    } else { 
+        char *cmdstring;
+
+        cmdstring = argv[1];
+        printf("filename: %s\n", cmdstring);
+
+        num_threads = atoi(argv[2]);
+        printf("threads: %d\n", num_threads);
     }
 
     /* an array of threads */
     pthread_t threads[num_threads];
     int ids[num_threads];
     int i;
+
+    /* read file given */
+
 
     /* spawn all threads */
     for (i = 0; i < num_threads; i++) {
