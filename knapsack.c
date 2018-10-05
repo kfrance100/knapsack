@@ -24,26 +24,29 @@ void* func(void* idp) {
 int main (int argc, char** argv) {
 
     /* get the number of threads */
-    if (argc < 3) {
+    if (argc < 3 || argv[2] < 0) {
         printf("Pass the knapsack file name and the number of threads to run the program with!\n");
         return 0;
     } else { 
-        char *cmdstring;
+        char *filename;
 
-        cmdstring = argv[1];
-        printf("filename: %s\n", cmdstring);
+        filename = argv[1];
+        printf("filename: %s\n", filename);
 
         num_threads = atoi(argv[2]);
         printf("threads: %d\n", num_threads);
     }
 
+    /* read in file */
+    FILE *fopen(const char *filename, const char * r);
+
+    /* close file */
+    int fclose( FILE *filename );
+    
     /* an array of threads */
     pthread_t threads[num_threads];
     int ids[num_threads];
     int i;
-
-    /* read file given */
-
 
     /* spawn all threads */
     for (i = 0; i < num_threads; i++) {
