@@ -5,6 +5,12 @@
 /* the number of threads */
 int num_threads;
 
+struct item {
+    int weight;
+    int value;
+};
+
+
 /* the function called for each thread */
 void* func(void* idp) {
     /* get our thread id */
@@ -23,8 +29,9 @@ void* func(void* idp) {
 
 int main (int argc, char** argv) {
     char *filename;
-    int nums[30] = {0};
-    int x, y = 0;
+    int x, y, size;
+    struct item items[50];
+
     /* get the number of threads */
     if (argc < 3 || argv[2] < 0) {
         printf("Pass the knapsack file name and the number of threads to run the program with!\n");
@@ -45,11 +52,11 @@ int main (int argc, char** argv) {
         // Program exits if the file pointer returns NULL.
         exit(1);
     }
-
+    
+    scanf("%d%d", size);
     while ((x = getc(file)) != EOF) {
         putchar(x);
-        nums[y] = x;
-        //printf("\nnums[%d] = %d\n", y, x);
+        scanf("%d%d", items[y].weight, items[y].value);
         y = y + 1;
     }
 
