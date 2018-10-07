@@ -29,7 +29,8 @@ void* func(void* idp) {
 
 int main (int argc, char** argv) {
     char *filename;
-    int x, y, size;
+    int x, y;
+    int size;
     struct item items[50];
 
     /* get the number of threads */
@@ -53,10 +54,11 @@ int main (int argc, char** argv) {
         exit(1);
     }
     
-    scanf("%d%d", size);
+    fscanf(file, "%d", &size);
     while ((x = getc(file)) != EOF) {
         putchar(x);
-        scanf("%d%d", items[y].weight, items[y].value);
+        fscanf(file, "%d %d", &items[y].weight, &items[y].value);
+        printf("item[%d]: %d, %d\n", y, items[y].weight, items[y].value);
         y = y + 1;
     }
 
