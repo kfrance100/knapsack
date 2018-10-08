@@ -2,13 +2,15 @@
 #include <pthread.h>
 #include <stdio.h>
 
-/* the number of threads */
-int num_threads;
-
 struct item {
     int weight;
     int value;
 };
+
+
+/* the number of threads */
+int num_threads;
+struct item items[50];
 
 /* the function called for each thread */
 void* func(void* idp) {
@@ -32,9 +34,11 @@ void* func(void* idp) {
 
 int main (int argc, char** argv) {
     char *filename;
-    int x, y, limit, count = 0;
-    struct item items[50];
-
+    int x = 0;
+    int y = 0;
+    int limit = 0;
+    int count = 0;
+    
     /* get the number of threads */
     if (argc < 3 || argv[2] < 0) {
         printf("Pass the knapsack file name and the number of threads to run the program with!\n");
@@ -57,13 +61,12 @@ int main (int argc, char** argv) {
     }
     
     fscanf(file, "%d", &limit);
-    while ((x = getc(file)) != EOF) {
+    while (fscanf(file, "%d %d", &items[y].weight, &items[y].value) != EOF) {
+        x = getc(file); 
+        putchar(x);
+        printf("item[%d]: %d, %d\n", y, items[y].weight, items[y].value);
         y = y + 1;
         count = count + 1;
-        putchar(x);
-        //*************************************HERE IS QUESTION #1, PRINT STATEMENT SHOWS ONE EXTRA 'ITEM'
-        fscanf(file, "%d %d", &items[y].weight, &items[y].value);
-        printf("item[%d]: %d, %d\n", y, items[y].weight, items[y].value);
     }
 
     /* close the file */    
