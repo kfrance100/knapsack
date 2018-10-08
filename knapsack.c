@@ -10,13 +10,16 @@ struct item {
     int value;
 };
 
-
 /* the function called for each thread */
 void* func(void* idp) {
     /* get our thread id */
     int id = * (int*) idp;
 
     /* calculate the best combination based on file */
+    //printf("item 1:%d\n", items[1].value);
+
+
+
 
     /* allocate space for the answer */
     int* answer = malloc(sizeof(int));
@@ -29,8 +32,7 @@ void* func(void* idp) {
 
 int main (int argc, char** argv) {
     char *filename;
-    int x, y;
-    int size;
+    int x, y, limit, count = 0;
     struct item items[50];
 
     /* get the number of threads */
@@ -54,12 +56,14 @@ int main (int argc, char** argv) {
         exit(1);
     }
     
-    fscanf(file, "%d", &size);
+    fscanf(file, "%d", &limit);
     while ((x = getc(file)) != EOF) {
+        y = y + 1;
+        count = count + 1;
         putchar(x);
+        //*************************************HERE IS QUESTION #1, PRINT STATEMENT SHOWS ONE EXTRA 'ITEM'
         fscanf(file, "%d %d", &items[y].weight, &items[y].value);
         printf("item[%d]: %d, %d\n", y, items[y].weight, items[y].value);
-        y = y + 1;
     }
 
     /* close the file */    
@@ -73,14 +77,15 @@ int main (int argc, char** argv) {
     /* spawn all threads */
     for (i = 0; i < num_threads; i++) {
         ids[i] = i;
-        //pthread_create(&threads[i], NULL, i, &ids[i]);
+        //*************************************************************HERE IS QUESTION #2
+        //pthread_create(&threads[i], NULL, func, &ids[i], &items[]);
     }
 
     /* join all threads collecting answer */
     int answer = 0;
     for (i = 0; i < num_threads; i++) {
         int* partial;
-        //pthread_join(threads[i], (void**) &partial);
+        //pthread_join(threads[i], NULL, func, items[]);
         //answer += *partial;
         //free(partial);
     }
