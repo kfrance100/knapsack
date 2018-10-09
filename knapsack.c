@@ -10,18 +10,23 @@ struct item {
 
 /* the number of threads */
 int num_threads;
+int item_count = 0;
+int weight_limit = 0;
+
 struct item items[50];
+
 
 /* the function called for each thread */
 void* func(void* idp) {
     /* get our thread id */
     int id = * (int*) idp;
+    
+    int possibilities = 2 ^ item_count;
+    int amtPerThread = possibilities / num_threads;
+    
 
     /* calculate the best combination based on file */
     //printf("item 1:%d\n", items[1].value);
-
-
-
 
     /* allocate space for the answer */
     int* answer = malloc(sizeof(int));
@@ -36,8 +41,6 @@ int main (int argc, char** argv) {
     char *filename;
     int x = 0;
     int y = 0;
-    int limit = 0;
-    int count = 0;
     
     /* get the number of threads */
     if (argc < 3 || argv[2] < 0) {
@@ -54,19 +57,22 @@ int main (int argc, char** argv) {
     /* read in file */
     FILE *file = fopen(filename, "r");
     
+    /* catches file name error */
     if (file == NULL){
-        printf("Error! opening file");
+        printf("Error! Incorrect file name.\n");
         // Program exits if the file pointer returns NULL.
         exit(1);
     }
     
-    fscanf(file, "%d", &limit);
+    /* reads numbers from file, keeps track of number of items, stores item values in array of structs */
+    fscanf(file, "%d", &weight_limit);
     while (fscanf(file, "%d %d", &items[y].weight, &items[y].value) != EOF) {
-        x = getc(file); 
-        putchar(x);
-        printf("item[%d]: %d, %d\n", y, items[y].weight, items[y].value);
+        item_count = item_count + 1;
+        //x = getc(file); 
+        //putchar(x);
+        //printf("item[%d]: %d, %d\n", y, items[y].weight, items[y].value);
+        //printf("count: %d\n", item_count);
         y = y + 1;
-        count = count + 1;
     }
 
     /* close the file */    
@@ -75,19 +81,30 @@ int main (int argc, char** argv) {
     /* an array of threads */
     pthread_t threads[num_threads];
     int ids[num_threads];
-    int i;
+    int i, j;
+    int total_combos = 2 ^ item_count;
+    int amt_per_thread = total_combos / num_threads;    
+    int possibilities[total_combos][item_count];
 
+    /* set possibilites matrix */
+    for(i = 0; i <= total_combos; i++) {
+        for(j = 0; j <= item_count; j++) { 
+            possibilities[i][j] = 1;
+            printf("possibilities[%d][%d] = %d\n", i, j, possibilities[i][j]);
+        }
+    }
     /* spawn all threads */
     for (i = 0; i < num_threads; i++) {
+        for(j = 0; j < amt_per_thread; j++) {
+            pthread_create(&threads[i], NULL, func, &items[j]);
+        }
         ids[i] = i;
-        //*************************************************************HERE IS QUESTION #2
-        //pthread_create(&threads[i], NULL, func, &ids[i], &items[]);
     }
 
     /* join all threads collecting answer */
     int answer = 0;
     for (i = 0; i < num_threads; i++) {
-        int* partial;
+        //int* partial;
         //pthread_join(threads[i], NULL, func, items[]);
         //answer += *partial;
         //free(partial);
