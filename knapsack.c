@@ -11,7 +11,6 @@ struct item {
 struct line {
     int values[28];
     int weights[28];
-    int amount;
     int idp;
 };
 
@@ -21,55 +20,67 @@ int item_count = 0;
 int weight_limit = 0;
 struct item items[28];
 struct line starting_lines[16];
+pthread_mutex_t lock;
 
-void add1(int *a, int len) {
+void add1(int *Line, int itemCount) {
     int carry = 1;
-    for (int i = len - 1; carry > 0 && i >= 0; i--) {
-        int result = a[i] + carry;
+    for (int i = itemCount - 1; carry > 0 && i >= 0; i--) {
+        int result = Line[i] + carry;
         carry = result >> 1;
-        a[i] = result & 1;
+        Line[i] = result & 1;
     }
 }
 
 /* the function called for each thread */
-void* func(void* line_p) {
-    struct line starting_line = *(struct line*) line_p;
+void* func(void* startingLine) {
+    struct line starting_line = *(struct line*) startingLine;
     /* get our thread id */
     int id = starting_line.idp;
     int line[item_count];
-    int temp[starting_line.amount];
+        
     /* allocate space for the answer */
     int* best = malloc(sizeof(int));
-    int weight = 0;
+    //best = 0;
+    int weight, value;
+    int total_combos = pow(2, item_count);
+    int amt_per_thread = total_combos / num_threads;
+    int temp[amt_per_thread];
 
-    if(starting_line.weights[id] <= weight_limit) {
+
+    //this may be wrong
+    /*if(starting_line.weights[id] <= weight_limit) {
         *best = starting_line.values[id];
         weight += starting_line.weights[id];
-    }
-    printf("best: %d\n", (int) *best);
+    } */
+    //printf("best: %d, thread: %d\n", (int) *best, id);
+    
+    pthread_mutex_lock(&lock);
     /* calculate the best combination based on file */
-    for(int i = 0; i < starting_line.amount; i++) {
+    for(int i = 0; i < amt_per_thread; i++) {
         for(int j = 0; j < item_count ; j++) { 
             add1(line, item_count);
-            //printf("line[%d]: %d\n", j, line[j]);
-            //possibilities[i][j] = line[j];
+            //printf("line: %d\n", line[j]);
             temp[j] = line[j];
-            printf("temp[%d] = %d\n", j, temp[j]); 
+            starting_line.values[j] = items[j].value;
+            starting_line.weights[j] = items[j].weight;
+            weight = starting_line.weights[j];
+            value = starting_line.values[j];
+            //printf("temp[%d] = %d\n", j, temp[j]); 
             
-            if((*best <= starting_line.values[temp[j]] + *best) && (weight + starting_line.weights[temp[j]] <= weight_limit)) {
-                *best = starting_line.values[temp[j]];
-                printf("new best: %d\n", *best);
+            if((temp[j] == 1) && (starting_line.values[j] + value >= *best) && (weight + starting_line.weights[j] <= weight_limit)) {
+                *best = *best + starting_line.values[j];
+                printf("new best: %d value: %d\n", *best, starting_line.values[j]);
             }
-            //printf("[%d][%d] = %d ", i, j, possibilities[i][j]);
         }
-        //printf("line[%d]: %d\n", i, line[j]);
-        //possibilities[i][j] = line[i];
-        temp[i] = line[i];
-        if(*best < starting_line.values[temp[i]])
-            *best = starting_line.values[temp[i]];
-
         //printf("\n");
-    }   
+        //printf("line[%d]: %d\n", i, line[j]);
+        /*temp[i] = line[i];
+        if(*best < starting_line.values[i])
+            *best = starting_line.values[i];
+        */
+        //printf("\n");
+    }
+    pthread_mutex_unlock(&lock);
 
     /* debugging output */
     // printf("Thread %d: sum(%d, %d) = %d\n", id, start, end, *answer);
@@ -81,6 +92,9 @@ int main (int argc, char** argv) {
     char *filename;
     int x = 0;
     int y = 0;
+
+    pthread_mutex_init(&lock, NULL);
+
 
     /* get the number of threads */
     if (argc < 3 || argv[2] < 0) {
@@ -122,29 +136,23 @@ int main (int argc, char** argv) {
     pthread_t threads[num_threads];
     int ids[num_threads];
     int i, j, temp;
-    int total_combos = pow(2, item_count);
-    //printf("%d",total_combos); 
-    int amt_per_thread = total_combos / num_threads;    
-    //int possibilities[(int)total_combos][item_count];
     int line[item_count];
-
-    for(i = 0; i < total_combos; i++) {
-        for(j = 0; j < item_count; j++) {
-            //possibilities[i][j] = 0;
-        }
+        
+    for(i = 0; i < item_count; i++) {
         line[i] = 0;
     }
 
     /* spawn all threads */
     for (i = 0; i < num_threads; i++) {
-        for(j = 0; j < amt_per_thread; j++) {
-            add1(line, item_count); 
-        }
-        starting_lines[i].values[i] = items[line[i]].value;
-        starting_lines[i].weights[i] = items[line[i]].weight;
-        starting_lines[i].amount = amt_per_thread;
-        pthread_create(&threads[i], NULL, func, &starting_lines[i]);
         ids[i] = i;
+        //add1(line, item_count);
+        starting_lines[i].weights[i] = items[i].weight;
+        starting_lines[i].values[i] = items[i].value;
+        //printf("weights[%d]: %d \n", i, starting_lines[i].weights[i]);
+        //printf("values[%d]: %d \n",i, starting_lines[i].values[i]);
+        starting_lines[i].idp = ids[i];
+        //printf("thread #: %d\n", starting_lines[i].idp); 
+        pthread_create(&threads[i], NULL, func, &starting_lines[i]);
     }
 
     /* join all threads collecting answer */
